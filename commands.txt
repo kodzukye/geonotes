@@ -8,4 +8,3 @@ npm run dev
 cd C:/wamp64/www/geonotes
 
 npm install tailwindcss @tailwindcss/vite
-
