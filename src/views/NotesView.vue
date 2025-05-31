@@ -2,6 +2,7 @@
   <div class="flex flex-col h-screen bg-gray-50">
     <!-- Header -->
     <div class="bg-white px-4 py-3 border-b border-gray-200">
+      <AppTitle />
       <SearchBar />
     </div>
 
@@ -91,6 +92,7 @@
 import { ref, onMounted, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import BottomNavigation from '@/components/BottomNavigation.vue'
+import AppTitle from '@/components/AppTitle.vue'
 import { supabase } from '@/lib/supabaseClient.js'
 import router from '@/router'
 
@@ -99,6 +101,7 @@ export default {
   components: {
     SearchBar,
     BottomNavigation,
+    AppTitle,
   },
   setup() {
     const selectedTab = ref('note')
@@ -146,7 +149,7 @@ export default {
     const openNote = (note) => {
       // Navigate to note detail view
       // You can implement this based on your routing setup
-      console.log('Opening note:', note)
+      console.log('Opening note')
     }
 
     onMounted(() => {

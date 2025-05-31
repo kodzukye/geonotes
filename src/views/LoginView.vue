@@ -12,7 +12,6 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
-const errorName = ref('')
 const router = useRouter()
 
 const handleLogin = async () => {
@@ -25,7 +24,6 @@ const handleLogin = async () => {
   loading.value = false
   if (error) {
     errorMessage.value = error.message
-    errorName.value = error.name || 'Erreur'
   } else if (data.session) {
     router.push('/explore') // Redirect
   }
@@ -38,7 +36,7 @@ const handleLogin = async () => {
       <form class="space-y-6" @submit.prevent="handleLogin">
         <AuthHeading :isLoginPage="true" />
         <div v-if="errorMessage" class="text-red-500 text-sm text-center">
-          {{ errorName }} - {{ errorMessage }}
+          {{ errorMessage }}
         </div>
         <AuthInputs v-model:email="email" v-model:password="password" />
         <AuthOptions class="mb-4" />

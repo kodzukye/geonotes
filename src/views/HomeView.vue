@@ -1,18 +1,21 @@
 <template>
   <main>
-    <h1>Hi Home page</h1>
-    <RouterLink to="/login">Login</RouterLink>
-    <RouterLink to="/register">Register</RouterLink>
+    <AppDesciption />
+    <HowDoesItWork />
   </main>
 </template>
 
 <script>
 import { RouterLink } from 'vue-router'
+import HowDoesItWork from '@/components/HowDoesItWork.vue'
+import AppDesciption from '@/components/AppDesciption.vue'
 
 export default {
   name: 'HomeView',
   components: {
     RouterLink,
+    HowDoesItWork,
+    AppDesciption,
   },
 }
 </script>

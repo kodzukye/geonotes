@@ -44,7 +44,7 @@ const handleSignUp = async () => {
     if (error) throw error
 
     if (data.user) {
-      router.push('/explore') // Create this route
+      router.push('/explore')
     }
   } catch (error) {
     errorMessage.value = error.message

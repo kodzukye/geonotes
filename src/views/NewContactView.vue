@@ -258,7 +258,7 @@ export default {
           notes: contact.notes || null,
         }
 
-        const { data, error } = await supabase.from('contacts').insert([contactData]).select()
+        //const { data, error } = await supabase.from('contacts').insert([contactData]).select()
 
         if (error) {
           console.error('Error creating contact:', error)
@@ -266,7 +266,7 @@ export default {
           return
         }
 
-        console.log('Contact created successfully:', data)
+        console.log('Contact created successfully')
         router.push('/contacts')
       } catch (error) {
         console.error('Error:', error)

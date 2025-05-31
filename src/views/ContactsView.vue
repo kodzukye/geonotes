@@ -135,8 +135,6 @@ export default {
     }
 
     const createContact = async () => {
-      // Logic to create a new contact in Supabase
-      console.log('Create new contact')
       router.push('/contacts/new/') // Redirect to create contact page
     }
 

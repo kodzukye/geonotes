@@ -1,5 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import InteractiveMapView from '@/views/InteractiveMapView.vue'
+import NotesView from '@/views/NotesView.vue'
+import ContactsView from '@/views/ContactsView.vue'
+import AccountView from '@/views/AccountView.vue'
+import NewNoteView from '@/views/NewNoteView.vue'
+import NewContactView from '@/views/NewContactView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,32 +28,32 @@ const router = createRouter({
     {
       path: '/explore',
       name: 'explore',
-      component: () => import('../views/InteractiveMapView.vue'),
+      component: InteractiveMapView,
     },
     {
       path: '/notes',
       name: 'notes',
-      component: () => import('../views/NotesView.vue'),
+      component: NotesView,
     },
     {
       path: '/contacts',
       name: 'contacts',
-      component: () => import('../views/ContactsView.vue'),
+      component: ContactsView,
     },
     {
       path: '/account',
       name: 'account',
-      component: () => import('../views/AccountView.vue'),
+      component: AccountView,
     },
     {
       path: '/notes/new/',
       name: 'new-note',
-      component: () => import('../views/NewNoteView.vue'),
+      component: NewNoteView,
     },
     {
       path: '/contacts/new/',
       name: 'new-contact',
-      component: () => import('../views/NewContactView.vue'),
+      component: NewContactView,
     },
   ],
 })

@@ -1,0 +1,3 @@
+<template>
+  <h1 class="text-2xl font-semibold text-gray-800 text-center pb-2">GeoNotes</h1>
+</template>
