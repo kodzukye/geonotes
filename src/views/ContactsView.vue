@@ -20,6 +20,7 @@
           v-for="contact in filteredContacts"
           :key="contact.id"
           class="bg-white px-4 py-4 hover:bg-gray-50 transition-colors duration-150 cursor-pointer flex items-center justify-between"
+          @click="goToEditContact(contact.id)"
         >
           <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -87,7 +88,8 @@ import { ref, onMounted, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import BottomNavigation from '@/components/BottomNavigation.vue'
 import { supabase } from '@/lib/supabaseClient.js'
-import router from '@/router'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'ContactsView',
@@ -96,6 +98,8 @@ export default {
     BottomNavigation,
   },
   setup() {
+    const router = useRouter()
+    const authStore = useAuthStore()
     const selectedTab = ref('contact')
     const contacts = ref([])
     const loading = ref(true)
@@ -116,30 +120,36 @@ export default {
     const fetchContacts = async () => {
       try {
         loading.value = true
+
+        // Only fetch contacts for the current user
         const { data, error } = await supabase
           .from('contacts')
           .select('*')
+          .eq('user_id', authStore.user.id) // Add this filter
           .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('Error fetching contacts:', error)
-          return
-        }
+        if (error) throw error
 
         contacts.value = data || []
       } catch (error) {
-        console.error('Error:', error)
+        console.error('Error fetching contacts:', error)
       } finally {
         loading.value = false
       }
     }
 
     const createContact = async () => {
-      router.push('/contacts/new/') // Redirect to create contact page
+      router.push('/contacts/new/')
+    }
+
+    function goToEditContact(contactId) {
+      router.push({ name: 'edit-contact', params: { id: contactId } })
     }
 
     onMounted(() => {
-      fetchContacts()
+      if (authStore.user) {
+        fetchContacts()
+      }
     })
 
     return {
@@ -150,6 +160,7 @@ export default {
       filteredContacts,
       fetchContacts,
       createContact,
+      goToEditContact,
     }
   },
 }

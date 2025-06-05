@@ -3,20 +3,13 @@
 </template>
 
 <script lang="js">
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
-import { supabase } from '@/lib/supabaseClient.js'
-import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-import { onMounted, ref } from 'vue'
-
-const session = ref()
 onMounted(() => {
-  supabase.auth.getSession().then(({ data }) => {
-    session.value = data.session
-  })
-  supabase.auth.onAuthStateChange((_, _session) => {
-    session.value = _session
-  })
+  const authStore = useAuthStore()
+  authStore.initializeAuth()
 })
 
 export default {

@@ -1,0 +1,247 @@
+<template>
+  <div class="flex flex-col h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white px-4 py-3 border-b border-gray-200 flex items-center">
+      <button @click="goBack" class="mr-3 p-2 rounded-full hover:bg-gray-100">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+      <h1 class="text-xl font-semibold text-gray-800">Modifier Contact</h1>
+    </div>
+
+    <!-- Form Content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <form @submit.prevent="handleSubmit" class="space-y-6">
+        <!-- Contact Information -->
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+          <h2 class="text-lg font-medium text-gray-800 mb-4">Informations du contact</h2>
+
+          <!-- Full Name -->
+          <div class="mb-4">
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
+              Nom complet *
+            </label>
+            <input
+              id="fullName"
+              v-model="contact.full_name"
+              type="text"
+              required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Entrez le nom complet"
+            />
+          </div>
+
+          <!-- Email -->
+          <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2"> Email </label>
+            <input
+              id="email"
+              v-model="contact.email"
+              type="email"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="exemple@email.com"
+            />
+          </div>
+
+          <!-- Phone -->
+          <div class="mb-4">
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+              Téléphone
+            </label>
+            <input
+              id="phone"
+              v-model="contact.phone"
+              type="tel"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="+596 696 12 34 56"
+            />
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4">
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              id="description"
+              v-model="contact.description"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Notes ou description du contact..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Tags Section (same as NewContactView) -->
+        <!-- ... [Keep the exact same tags section from NewContactView.vue] ... -->
+
+        <!-- Error Message -->
+        <div v-if="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p class="text-red-800 text-sm">{{ errorMessage }}</p>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+          <button
+            type="submit"
+            :disabled="loading || !contact.full_name.trim()"
+            class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+          >
+            {{ loading ? 'Sauvegarde en cours...' : 'Sauvegarder les modifications' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabaseClient'
+import { useAuthStore } from '@/stores/auth'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+
+// Form data
+const contact = ref({
+  id: '',
+  full_name: '',
+  email: '',
+  phone: '',
+  description: '',
+})
+
+// Tags data (same as NewContactView)
+const selectedTags = ref([])
+const availableTags = ref([])
+const tagInput = ref('')
+const showSuggestions = ref(false)
+const loading = ref(false)
+const errorMessage = ref('')
+
+// Fetch contact data
+const fetchContact = async () => {
+  try {
+    loading.value = true
+
+    // Get contact data
+    const { data: contactData, error: contactError } = await supabase
+      .from('contacts')
+      .select('*, contacts_tags(tags(*))')
+      .eq('id', route.params.id)
+      .single()
+
+    if (contactError) throw contactError
+
+    // Populate form fields
+    contact.value = {
+      id: contactData.id,
+      full_name: contactData.full_name,
+      email: contactData.email,
+      phone: contactData.phone,
+      description: contactData.description,
+    }
+
+    // Populate tags
+    selectedTags.value = contactData.contacts_tags.map((ct) => ct.tags)
+  } catch (error) {
+    console.error('Error fetching contact:', error)
+    errorMessage.value = 'Erreur lors du chargement du contact'
+    router.push('/contacts')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadTags = async () => {
+  try {
+    const { data, error } = await supabase.from('tags').select('id, name').order('name')
+    if (error) throw error
+    availableTags.value = data || []
+  } catch (error) {
+    console.error('Error loading tags:', error)
+  }
+}
+
+// Handle form submission
+const handleSubmit = async () => {
+  if (!contact.value.full_name.trim()) {
+    errorMessage.value = 'Le nom complet est requis'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    // Update contact
+    const { error: updateError } = await supabase
+      .from('contacts')
+      .update({
+        full_name: contact.value.full_name.trim(),
+        email: (contact.value.email ?? '').trim() || null,
+        phone: (contact.value.phone ?? '').trim() || null,
+        description: (contact.value.description ?? '').trim() || null,
+      })
+      .eq('id', contact.value.id)
+
+    if (updateError) throw updateError
+
+    // Update tags relationships
+    const currentTagIds = selectedTags.value.map((t) => t.id)
+    const originalTagIds = contact.value.contacts_tags?.map((ct) => ct.tags.id) || []
+
+    // Tags to remove
+    const tagsToRemove = originalTagIds.filter((id) => !currentTagIds.includes(id))
+    if (tagsToRemove.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('contacts_tags')
+        .delete()
+        .in('tag_id', tagsToRemove)
+        .eq('contact_id', contact.value.id)
+
+      if (deleteError) throw deleteError
+    }
+
+    // Tags to add
+    const tagsToAdd = currentTagIds.filter((id) => !originalTagIds.includes(id))
+    if (tagsToAdd.length > 0) {
+      const newRelations = tagsToAdd.map((tagId) => ({
+        contact_id: contact.value.id,
+        tag_id: tagId,
+      }))
+
+      const { error: insertError } = await supabase.from('contacts_tags').insert(newRelations)
+
+      if (insertError) throw insertError
+    }
+
+    // Success - redirect to contacts list
+    router.push('/contacts')
+  } catch (error) {
+    console.error('Error updating contact:', error)
+    errorMessage.value = 'Erreur lors de la mise à jour du contact'
+  } finally {
+    loading.value = false
+  }
+}
+
+// Load data on mount
+onMounted(async () => {
+  await fetchContact()
+  await loadTags()
+})
+
+const goBack = () => {
+  router.go(-1)
+}
+</script>

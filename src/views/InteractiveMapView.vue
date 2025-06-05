@@ -3,15 +3,16 @@
     <!-- Header -->
     <div class="bg-white px-4 py-3 border-b border-gray-200 z-10">
       <AppTitle />
-      <SearchBar placeholder="Rechercher un contact" />
+      <SearchBar v-model="searchQuery" @place-selected="handlePlaceSelected" />
     </div>
 
     <!-- Map Section -->
     <div class="flex-1 relative">
       <!-- Google Map fills this area -->
-      <GoogleMap class="w-full h-full" />
+      <GoogleMap ref="googleMapRef" class="w-full h-full" />
       <!-- Floating Add Button -->
       <button
+        v-show="false"
         @click="createNote"
         class="absolute right-2 bottom-50 w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-150 z-20"
       >
@@ -39,34 +40,27 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import BottomNavigation from '@/components/BottomNavigation.vue'
 import AppTitle from '@/components/AppTitle.vue'
 import GoogleMap from '@/components/GoogleMap.vue'
 import router from '@/router'
 
-export default {
-  name: 'InteractiveMap',
-  components: {
-    SearchBar,
-    BottomNavigation,
-    AppTitle,
-    GoogleMap,
-  },
-  setup() {
-    const createNote = async () => {
-      router.push('/notes/new/')
-    }
+const searchQuery = ref('')
+const selectedTab = ref('explore')
+const googleMapRef = ref(null)
 
-    return {
-      createNote,
-    }
-  },
-  data() {
-    return {
-      selectedTab: 'explore',
-    }
-  },
+const createNote = async () => {
+  router.push('/notes/new/')
+}
+
+// Handle place selection from search bar
+const handlePlaceSelected = (place) => {
+  // Get place details and show on map
+  if (googleMapRef.value && googleMapRef.value.showPlaceFromSearch) {
+    googleMapRef.value.showPlaceFromSearch(place.place_id)
+  }
 }
 </script>

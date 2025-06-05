@@ -68,7 +68,7 @@
     </div>
 
     <!-- Floating Add Button -->
-    <div class="absolute bottom-20 right-4 pb-4">
+    <div v-show="false" class="absolute bottom-20 right-4 pb-4">
       <button
         @click="createNote"
         class="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors duration-150"
@@ -95,6 +95,7 @@ import BottomNavigation from '@/components/BottomNavigation.vue'
 import AppTitle from '@/components/AppTitle.vue'
 import { supabase } from '@/lib/supabaseClient.js'
 import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'NotesView',
@@ -104,6 +105,7 @@ export default {
     AppTitle,
   },
   setup() {
+    const authStore = useAuthStore()
     const selectedTab = ref('note')
     const notes = ref([])
     const loading = ref(true)
@@ -123,37 +125,36 @@ export default {
     const fetchNotes = async () => {
       try {
         loading.value = true
+
+        // Only fetch notes for the current user
         const { data, error } = await supabase
           .from('notes')
           .select('*')
+          .eq('user_id', authStore.user.id) // Add this filter
           .order('created_at', { ascending: false })
 
-        if (error) {
-          console.error('Error fetching notes:', error)
-          return
-        }
+        if (error) throw error
 
         notes.value = data || []
       } catch (error) {
-        console.error('Error:', error)
+        console.error('Error fetching notes:', error)
       } finally {
         loading.value = false
       }
     }
 
     const createNote = async () => {
-      console.log('Create new note')
-      router.push('/notes/new/') // Redirect to create contact page
+      router.push('/notes/new/')
     }
 
     const openNote = (note) => {
-      // Navigate to note detail view
-      // You can implement this based on your routing setup
-      console.log('Opening note')
+      router.push(`/notes/edit/${note.id}`)
     }
 
     onMounted(() => {
-      fetchNotes()
+      if (authStore.user) {
+        fetchNotes()
+      }
     })
 
     return {

@@ -1,40 +1,31 @@
 <template>
-  <h1>Account</h1>
+  <div class="relative h-screen">
+    <h1 class="p-4">Account</h1>
 
-  <form @submit.prevent="signOut" class="relative">
-    <SignOutButton class="absolute top-4 right-4" />
-  </form>
-  <BottomNavigation v-model="selectedTab" />
+    <SignOutButton @click="handleSignOut" class="absolute top-4 right-4" />
+
+    <BottomNavigation v-model="selectedTab" />
+  </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import BottomNavigation from '@/components/BottomNavigation.vue'
-import { supabase } from '@/lib/supabaseClient.js'
 import SignOutButton from '@/components/SignOutButton.vue'
 
 const selectedTab = ref('compte')
+const router = useRouter()
+const authStore = useAuthStore()
 
-export default {
-  name: 'InteractiveMap',
-  components: {
-    BottomNavigation,
-    SignOutButton,
-  },
-  data() {
-    return {
-      selectedTab: 'compte', // Set default to match the current view
-    }
-  },
-}
-
-async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
-    console.error('Error signing out:', error.message)
-  } else {
-    console.log('User signed out successfully')
-    this.$router.push('/login')
+const handleSignOut = async () => {
+  try {
+    await authStore.logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout error:', error.message)
+    // Optionally show error to user
   }
 }
 </script>

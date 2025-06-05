@@ -7,25 +7,37 @@ import AuthRedirectLink from '@/components/AuthRedirectLink.vue'
 import AuthHeading from '@/components/AuthHeading.vue'
 import { supabase } from '@/lib/supabaseClient.js'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 const router = useRouter()
+const authStore = useAuthStore()
 
 const handleLogin = async () => {
   loading.value = true
   errorMessage.value = ''
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value,
-  })
-  loading.value = false
-  if (error) {
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value,
+    })
+
+    if (error) throw error
+
+    // Update auth store state
+    authStore.user = data.user
+    await authStore.initializeAuth() // Ensure session is initialized
+
+    // Redirect to protected route
+    router.push('/explore')
+  } catch (error) {
     errorMessage.value = error.message
-  } else if (data.session) {
-    router.push('/explore') // Redirect
+  } finally {
+    loading.value = false
   }
 }
 </script>

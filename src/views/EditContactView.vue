@@ -12,7 +12,7 @@
           />
         </svg>
       </button>
-      <h1 class="text-xl font-semibold text-gray-800">Nouveau Contact</h1>
+      <h1 class="text-xl font-semibold text-gray-800">Modifier Contact</h1>
     </div>
 
     <!-- Form Content -->
@@ -78,7 +78,7 @@
           </div>
         </div>
 
-        <!-- Tags Section -->
+        <!-- Tags Section (same as NewContactView) -->
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <h2 class="text-lg font-medium text-gray-800 mb-4">Tags</h2>
 
@@ -185,7 +185,7 @@
             :disabled="loading || !contact.full_name.trim()"
             class="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium py-3 px-4 rounded-lg transition-colors"
           >
-            {{ loading ? 'Création en cours...' : 'Créer le contact' }}
+            {{ loading ? 'Sauvegarde en cours...' : 'Sauvegarder les modifications' }}
           </button>
         </div>
       </form>
@@ -195,15 +195,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabaseClient'
+import { useAuthStore } from '@/stores/auth'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
 // Form data
 const contact = ref({
+  id: '',
   full_name: '',
   email: '',
   phone: '',
@@ -221,7 +223,6 @@ const errorMessage = ref('')
 // Computed properties
 const filteredTags = computed(() => {
   if (!tagInput.value.trim()) return availableTags.value
-
   const searchTerm = tagInput.value.toLowerCase().trim()
   return availableTags.value.filter(
     (tag) =>
@@ -235,33 +236,19 @@ const tagExists = computed(() => {
   return availableTags.value.some((tag) => tag.name.toLowerCase() === searchTerm)
 })
 
-// Load existing tags
-const loadTags = async () => {
-  try {
-    const { data, error } = await supabase.from('tags').select('id, name').order('name')
-
-    if (error) throw error
-    availableTags.value = data || []
-  } catch (error) {
-    console.error('Error loading tags:', error)
-  }
-}
-
-// Search tags
+// Tag functions
 const searchTags = () => {
   showSuggestions.value = tagInput.value.trim().length > 0
 }
 
-// Select existing tag
 const selectExistingTag = (tag) => {
-  if (!selectedTags.value.some((selectedTag) => selectedTag.id === tag.id)) {
+  if (!selectedTags.value.some((t) => t.id === tag.id)) {
     selectedTags.value.push(tag)
   }
   tagInput.value = ''
   showSuggestions.value = false
 }
 
-// Create new tag
 const createNewTag = async () => {
   const tagName = tagInput.value.trim()
   if (!tagName) return
@@ -288,7 +275,6 @@ const createNewTag = async () => {
 
     if (error) throw error
 
-    // Add to available tags and select it
     availableTags.value.push(data)
     selectedTags.value.push(data)
     tagInput.value = ''
@@ -299,7 +285,6 @@ const createNewTag = async () => {
   }
 }
 
-// Add tag (Enter key)
 const addTag = () => {
   if (filteredTags.value.length > 0) {
     selectExistingTag(filteredTags.value[0])
@@ -308,15 +293,54 @@ const addTag = () => {
   }
 }
 
-// Remove tag
 const removeTag = (tagToRemove) => {
   selectedTags.value = selectedTags.value.filter((tag) => tag.id !== tagToRemove.id)
 }
 
-// Clear tag search
 const clearTagSearch = () => {
   tagInput.value = ''
   showSuggestions.value = false
+}
+
+// Fetch contact data
+const fetchContact = async () => {
+  try {
+    loading.value = true
+    const { data: contactData, error } = await supabase
+      .from('contacts')
+      .select('*, contacts_tags(tags(*))')
+      .eq('id', route.params.id)
+      .single()
+
+    if (error) throw error
+
+    contact.value = {
+      id: contactData.id,
+      full_name: contactData.full_name,
+      email: contactData.email,
+      phone: contactData.phone,
+      description: contactData.description,
+    }
+
+    selectedTags.value = contactData.contacts_tags.map((ct) => ct.tags)
+  } catch (error) {
+    console.error('Error fetching contact:', error)
+    errorMessage.value = 'Erreur lors du chargement du contact'
+    router.push('/contacts')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadTags = async () => {
+  try {
+    const { data, error } = await supabase.from('tags').select('id, name').order('name')
+
+    if (error) throw error
+    availableTags.value = data || []
+  } catch (error) {
+    console.error('Error loading tags:', error)
+  }
 }
 
 // Handle form submission
@@ -330,50 +354,61 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    // Insert contact
-    const { data: newContact, error: contactError } = await supabase
+    // Update contact
+    const { error: updateError } = await supabase
       .from('contacts')
-      .insert({
-        user_id: authStore.user.id,
+      .update({
         full_name: contact.value.full_name.trim(),
-        email: contact.value.email.trim() || null,
-        phone: contact.value.phone.trim() || null,
-        description: contact.value.description.trim() || null,
+        email: (contact.value.email ?? '').trim() || null,
+        phone: (contact.value.phone ?? '').trim() || null,
+        description: (contact.value.description ?? '').trim() || null,
       })
-      .select('id')
-      .single()
+      .eq('id', contact.value.id)
 
-    if (contactError) throw contactError
+    if (updateError) throw updateError
 
-    // Insert contact-tag relationships
-    if (selectedTags.value.length > 0) {
-      const contactTagRelations = selectedTags.value.map((tag) => ({
-        contact_id: newContact.id,
-        tag_id: tag.id,
+    // Get current tag IDs
+    const currentTagIds = selectedTags.value.map((t) => t.id)
+
+    // Remove all existing relationships first to avoid conflicts
+    const { error: deleteError } = await supabase
+      .from('contacts_tags')
+      .delete()
+      .eq('contact_id', contact.value.id)
+
+    if (deleteError) throw deleteError
+
+    // Insert new relationships using upsert with ignoreDuplicates
+    if (currentTagIds.length > 0) {
+      const newRelations = currentTagIds.map((tagId) => ({
+        contact_id: contact.value.id,
+        tag_id: tagId,
       }))
 
-      const { error: tagsError } = await supabase.from('contacts_tags').insert(contactTagRelations)
+      const { error: upsertError } = await supabase.from('contacts_tags').upsert(newRelations, {
+        onConflict: 'contact_id,tag_id',
+        ignoreDuplicates: true,
+      })
 
-      if (tagsError) throw tagsError
+      if (upsertError) throw upsertError
     }
 
     // Success - redirect to contacts list
     router.push('/contacts')
   } catch (error) {
-    console.error('Error creating contact:', error)
-    errorMessage.value = 'Erreur lors de la création du contact'
+    console.error('Error updating contact:', error)
+    errorMessage.value = 'Erreur lors de la mise à jour du contact'
   } finally {
     loading.value = false
   }
 }
 
-// Go back
+onMounted(async () => {
+  await fetchContact()
+  await loadTags()
+})
+
 const goBack = () => {
   router.go(-1)
 }
-
-// Load data on mount
-onMounted(() => {
-  loadTags()
-})
 </script>

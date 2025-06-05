@@ -9,9 +9,10 @@ import './assets/base.css'
 
 import VueGoogleMaps from '@fawmi/vue-google-maps'
 
+const pinia = createPinia()
 const app = createApp(App)
 
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
 
 app.use(VueGoogleMaps, {
