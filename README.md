@@ -1,61 +1,73 @@
-# geonotes
+# 📍 Geonotes
 
-This template should help get you started developing with Vue 3 in Vite.
+> Web application for geolocated notes developed during an internship
 
-## Recommended IDE Setup
+A location-based notes web application that allows users to create, manage, and visualize notes attached to specific geographic locations using an interactive map interface.
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+![Vue.js](https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D)
+![Supabase](https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=white)
+![Google Maps](https://img.shields.io/badge/Google_Maps-4285F4?style=for-the-badge&logo=google-maps&logoColor=white)
 
-## Type Support for `.vue` Imports in TS
+## 🎯 Overview
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+Geonotes is a full-stack web application developed during an internship that enables users to pin notes to real-world locations. Whether you're documenting points of interest, creating location-based reminders, or organizing information spatially, Geonotes provides an intuitive interface powered by Google Maps integration.
 
-## Customize configuration
+## ✨ Features
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+- **Interactive Map Interface**: Browse and navigate using Google Maps API
+- **Create Location-Based Notes**: Pin notes to specific geographic coordinates with a simple click
+- **Responsive Design**: Seamless experience across desktop and mobile devices
+- **User Authentication**: Secure login and user management
 
-## Project Setup
+## 🛠️ Tech Stack
 
-```sh
+- **Frontend Framework**: Vue.js
+- **Backend & Database**: Supabase (PostgreSQL, Authentication)
+- **Maps Integration**: Google Maps JavaScript API
+- **Languages**: JavaScript, HTML, CSS
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js
+- npm or yarn
+- A Supabase account
+- A Google Cloud Platform account with Maps API enabled
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+```
+git clone https://github.com/kodzukye/geonotes.git
+cd geonotes
+```
+
+### 2. Install dependencies
+```
 npm install
 ```
 
-### Compile and Hot-Reload for Development
-
-```sh
+### 3. Run the development server
+```
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
 
-```sh
-npm run build
-```
+The application will be available at `http://localhost:5173`
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## 📖 Usage
 
-```sh
-npm run test:unit
-```
+1. **Sign Up/Login**: Create an account or log in to access the application
+2. **View Map**: The main interface displays an interactive Google Map
+3. **Create a Note**: Click on any location on the map to create a new note
+4. **View Notes**: Click on existing markers to view note details
+5. **Edit/Delete**: Manage your notes with edit and delete options
 
-### Run End-to-End Tests with [Cypress](https://www.cypress.io/)
+## 🎓 About This Project
 
-```sh
-npm run test:e2e:dev
-```
-
-This runs the end-to-end tests against the Vite development server.
-It is much faster than the production build.
-
-But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
-
-```sh
-npm run build
-npm run test:e2e
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+This application was developed as part of an internship project, demonstrating:
+- Full-stack web development capabilities
+- Third-party API integration (Google Maps)
+- Data management with Supabase
+- Modern JavaScript framework implementation (Vue.js)
+- Responsive web design principles
